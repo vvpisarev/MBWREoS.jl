@@ -4,6 +4,7 @@ export MBWREoSComponent, MBWREoSMixture
 
 import CubicEoS
 using CubicEoS: AbstractEoSComponent, AbstractEoSMixture
+using CubicEoS: name
 
 using CubicEoSDatabase
 
