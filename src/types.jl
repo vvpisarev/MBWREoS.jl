@@ -1,7 +1,3 @@
-abstract type AbstractEoSComponent end
-
-abstract type AbstractEoSMixture end
-
 const NothingOrT{T} = Union{Nothing,T}
 
 struct MBWREoSComponent{T<:Number} <: AbstractEoSComponent
@@ -43,15 +39,11 @@ MBWREoSComponent(; x...) = MBWREoSComponent{Float64}(; x...)
 
 Base.eltype(::MBWREoSComponent{T}) where {T} = T
 
-for func in (:molar_mass, :name, :acentric_factor, :carbon_number)
-    expr = :($(func)(c::MBWREoSComponent) = getfield(c, $(QuoteNode(func))))
-    eval(expr)
-    eval(:(export $func))
-end
+CubicEoS.molar_mass(x::MBWREoSComponent) = x.molar_mass
+CubicEoS.name(x::MBWREoSComponent) = x.name
+acentric_factor(x::MBWREoSComponent) = x.acentric_factor  # Not defined in CubicEoS
+CubicEoS.carbon_number(x::MBWREoSComponent) = x.carbon_number
 
-#=
-Mixture
-=#
 
 struct MBWREoSMixture{T} <: AbstractEoSMixture
     components::Vector{MBWREoSComponent{T}}
@@ -59,8 +51,7 @@ struct MBWREoSMixture{T} <: AbstractEoSMixture
     kij::Matrix{T} # binary interaction coefficient for f
     lij::Matrix{T} # binary interaction coefficient for h
 
-    function MBWREoSMixture(
-        ;
+    function MBWREoSMixture(;
         components::AbstractVector{MBWREoSComponent{T}},
         kij::NothingOrT{AbstractMatrix}=nothing,
         lij::NothingOrT{AbstractMatrix}=nothing,
@@ -75,7 +66,7 @@ end
 
 @inline Base.@propagate_inbounds function Base.getindex(
     mix::MBWREoSMixture,
-    i::Integer
+    i::Integer,
 )
     return mix.components[i]
 end
