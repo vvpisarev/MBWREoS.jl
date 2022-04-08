@@ -1,8 +1,3 @@
-#=
-Basic thermodynamic properties
-=#
-using LinearAlgebra
-
 @inline ncomponents(mix::MBWREoSMixture) = length(mix.components)
 @inline Base.length(mix::MBWREoSMixture) = length(mix.components)
 
@@ -161,15 +156,8 @@ function pressure(substance::MBWREoSComponent, nmol::Real, V::Real, RT::Real)
     return pressure(substance, V / nmol, RT)
 end
 
-"""
-    pressure(substance; nmol = 1, volume, temperature)
-
-Compute pressure (Pa) of `substance` at given number of moles `nmol` (mol),
-total volume (m³) and temperature (K).
-"""
-function pressure(
-    substance::MBWREoSComponent;
-    nmol::Real = 1,
+function pressure(substance::MBWREoSComponent;
+    nmol::Real=1,
     volume::Real,
     temperature::Real,
 )
@@ -177,55 +165,13 @@ function pressure(
     return pressure(substance, nmol, volume, RT)
 end
 
-"""
-    wilson_saturation_pressure(substance, RT)
-
-Return approximate saturation pressure of `substance` at `RT` (J mol⁻¹).
-
-Reference: Brusilovsky2002 [p 272, eq 5.4]
-"""
 function wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
-    return wilson_saturation_pressure(
+    return CubicEoS.wilson_saturation_pressure(
         substance.Pc, substance.RTc, substance.acentric_factor, RT
     )
 end
 
-"""
-    wilson_saturation_pressure(Pc::Real, RTc::Real, acentric_factor::Real, RT::Real)
-
-Approximate saturation pressure at `RT` using Wilson correlation.
-
-# Arguments
-- `Pc::Real` - critical pressure
-- `RTc::Real` - gas constant * critical temperature
-- `acentric_factor::Real` - acentric factor
-- `RT::Real` - gas constant * temperature
-
-Reference: Brusilovsky2002 [p 272, eq 5.4], Mikyska2010 DOI 10.1002/aic.12387 [Algorithm step 1]
-"""
-function wilson_saturation_pressure(Pc::Real, RTc::Real, acentric_factor::Real, RT::Real)
-    return Pc * exp(5.373 * (1.0 + acentric_factor) * (1.0 - RTc / RT))
-end
-
-"""
-    pressure(mixture, nmol, volume, RT[; buf])
-
-Return pressure (Pa) of `mixture` at given
-
-- `nmol::AbstractVector`: composition (molar parts) or number of moles (mol)
-- `volume::Real`: molar volume (m³ mol⁻¹) or volume (m³)
-- `RT::Real`: thermal energy (J mol⁻¹)
-
-Allocations may be avoided by passing `buf`.
-
-# Keywords
-- `buf::Union{BrusilovskyThermoBuffer,NamedTuple,AbstractDict}`: Buffer for intermediate
-    calculations. In case of `NamedTuple` and `AbstractDict` `buf` should contain `buf[:ai]`
-    `NC = ncomponents(mixture)` vector and `buf[:aij]` NCxNC matrix.
-
-See also: [`thermo_buffer`](@ref)
-"""
-function pressure(
+function CubicEoS.pressure(
     mixture::MBWREoSMixture,
     nmol::AbstractVector,
     volume::Real,

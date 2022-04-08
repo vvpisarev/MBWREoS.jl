@@ -58,8 +58,8 @@ struct MBWREoSMixture{T} <: AbstractEoSMixture
         kw...
     ) where {T}
         nc = length(components)
-        kmatr = kij === nothing ? zeros(T, nc, nc) : kij
-        lmatr = lij === nothing ? zeros(T, nc, nc) : lij
+        kmatr = isnothing(kij) ? zeros(T, nc, nc) : kij
+        lmatr = isnothing(lij) ? zeros(T, nc, nc) : lij
         new{T}(components, kmatr, lmatr)
     end
 end
@@ -70,6 +70,8 @@ end
 )
     return mix.components[i]
 end
+
+components(x::MBWREoSMixture) = x.components
 
 struct MBWRThermoBuffer{T}
     fij::Matrix{T}
@@ -103,13 +105,5 @@ function MBWRThermoBuffer(mix::MBWREoSMixture{Tm}, nmol::AbstractVector{Tn}) whe
     return MBWRThermoBuffer{T}(nc)
 end
 
-"""
-    thermo_buffer(mix[, nmol])
-
-Create a buffer for intermediate calculations of mixture thermodynamic properties.
-
-See also: [`pressure`](@ref), [`log_c_activity`](@ref), [`log_c_activity!`](@ref),
-[`log_c_activity_wj`](@ref), [`log_c_activity_wj!`](@ref)
-"""
 thermo_buffer(mix::MBWREoSMixture) = MBWRThermoBuffer(mix)
 thermo_buffer(mix::MBWREoSMixture, nmol) = MBWRThermoBuffer(mix, nmol)
