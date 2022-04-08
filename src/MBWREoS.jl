@@ -7,8 +7,8 @@ using CubicEoS: AbstractEoSComponent, AbstractEoSMixture
 using CubicEoS: name
 
 using CubicEoSDatabase
+using ForwardDiff
 using LinearAlgebra
-
 
 include("constants.jl")
 include("types.jl")

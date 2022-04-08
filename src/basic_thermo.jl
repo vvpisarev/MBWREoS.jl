@@ -55,8 +55,7 @@ composition `nmol` and thermal energy `RT`. Allocations may be avoided by passin
 # Keywords
 - `buf`: see ?pressure(mixture)
 """
-function scaling_coeffs(
-    mix::MBWREoSMixture, nmol::AbstractVector, T;
+function scaling_coeffs(mix::MBWREoSMixture, nmol::AbstractVector, T;
     buf::MBWRThermoBuffer=thermo_buffer(mix, nmol)
 )
     fs, hs = __shape_factors!__(mix, T, buf.vec1, buf.vec2)
