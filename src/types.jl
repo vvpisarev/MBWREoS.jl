@@ -72,8 +72,9 @@ end
 end
 
 components(x::MBWREoSMixture) = x.components
+CubicEoS.ncomponents(x::MBWREoSMixture) = length(x.components)
 
-struct MBWRThermoBuffer{T}
+struct MBWRThermoBuffer{T} <: AbstractEoSThermoBuffer
     fij::Matrix{T}
     hij::Matrix{T}
     matr::Matrix{T}
@@ -105,5 +106,6 @@ function MBWRThermoBuffer(mix::MBWREoSMixture{Tm}, nmol::AbstractVector{Tn}) whe
     return MBWRThermoBuffer{T}(nc)
 end
 
-thermo_buffer(mix::MBWREoSMixture) = MBWRThermoBuffer(mix)
-thermo_buffer(mix::MBWREoSMixture, nmol) = MBWRThermoBuffer(mix, nmol)
+CubicEoS.thermo_buffer(mix::MBWREoSMixture) = MBWRThermoBuffer(mix)
+CubicEoS.thermo_buffer(mix::MBWREoSMixture, nmol) = MBWRThermoBuffer(mix, nmol)
+thermo_buffer = CubicEoS.thermo_buffer

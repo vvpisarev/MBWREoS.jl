@@ -75,7 +75,7 @@ function exc_helmholtz(
     return Aexc * fx * total_mol
 end
 
-function log_c_activity(
+function CubicEoS.log_c_activity(
     mix::MBWREoSMixture,
     nmol::AbstractVector,
     volume::Real,
@@ -88,7 +88,7 @@ function log_c_activity(
     return log_ca
 end
 
-function log_c_activity!(
+function CubicEoS.log_c_activity!(
     log_ca::AbstractVector,
     mix::MBWREoSMixture,
     nmol::AbstractVector,
@@ -102,7 +102,7 @@ function log_c_activity!(
     return log_ca
 end
 
-function log_c_activity_wj(
+function CubicEoS.log_c_activity_wj(
     mix::MBWREoSMixture{T},
     nmol::AbstractVector,
     volume::Real,
@@ -117,7 +117,7 @@ function log_c_activity_wj(
     return log_ca, jacobian
 end
 
-function log_c_activity_wj!(
+function CubicEoS.log_c_activity_wj!(
     log_ca::AbstractVector,
     jacobian::AbstractMatrix,
     mix::MBWREoSMixture,

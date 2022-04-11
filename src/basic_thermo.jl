@@ -163,7 +163,7 @@ function pressure(substance::MBWREoSComponent;
     return pressure(substance, nmol, volume, RT)
 end
 
-function wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
+function CubicEoS.wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
     return CubicEoS.wilson_saturation_pressure(
         substance.Pc, substance.RTc, substance.acentric_factor, RT
     )

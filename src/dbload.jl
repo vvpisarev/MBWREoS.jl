@@ -52,7 +52,7 @@ function __load_mbwr_comp__(
     )
 end
 
-function load(::Type{<:MBWREoSMixture};
+function CubicEoS.load(::Type{<:MBWREoSMixture};
     names,
     component_dbs=(Data.martinez(), Data.brusilovsky_comp()),
     mix_eos_db::MixtureDatabase=Data.brusilovsky_mix_adjusted(),

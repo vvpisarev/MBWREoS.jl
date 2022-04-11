@@ -3,7 +3,7 @@ module MBWREoS
 export MBWREoSComponent, MBWREoSMixture
 
 import CubicEoS
-using CubicEoS: AbstractEoSComponent, AbstractEoSMixture
+using CubicEoS: AbstractEoSComponent, AbstractEoSMixture, AbstractEoSThermoBuffer
 using CubicEoS: name
 
 using CubicEoSDatabase
