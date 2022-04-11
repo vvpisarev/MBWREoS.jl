@@ -61,15 +61,14 @@ function scaling_coeffs(mix::MBWREoSMixture, nmol::AbstractVector, T;
     fs, hs = __shape_factors!__(mix, T, buf.vec1, buf.vec2)
     fm, hm = __shape_matrices!__(fs, hs, buf.fij, buf.hij)
     comp = components(mix)
-    # mws = map!(molar_mass, buf.vec1, comp)
-    total_mol = sum(nmol)
-    x = map!(x -> x / total_mol, buf.vec2, nmol)
-    hx = sum(x[i] * x[j] * hm[i,j] for i in eachindex(comp) for j in eachindex(comp))
-    fx = sum(x[i] * x[j] * hm[i,j] * fm[i,j]
-        for i in eachindex(comp) for j in eachindex(comp)) / hx
-    # mw = sum(x[i] * x[j] * cbrt(hm[i,j])^4 * sqrt(fm[i,j]) *
-    #     sqrt(2 * mws[i] * mws[j] / (mws[i] + mws[j]))
-    #     for i in eachindex(comp) for j in eachindex(comp))^2 / (fx * cbrt(hx)^8)
+    # TODO: use buf.vec2
+    # For some reasons buf.vec2 .= nmol ./ sum(nmol) don't work w ForwardDiff
+    x = nmol ./ sum(nmol)
+
+    hx = sum(x[i] * x[j] * hm[i,j] for i in eachindex(comp), j in eachindex(comp))
+    fx = sum(
+        x[i] * x[j] * hm[i,j] * fm[i,j] for i in eachindex(comp), j in eachindex(comp)
+    ) / hx
     return (; fx, hx)
 end
 
