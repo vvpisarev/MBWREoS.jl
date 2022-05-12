@@ -45,7 +45,7 @@ acentric_factor(x::MBWREoSComponent) = x.acentric_factor  # Not defined in Cubic
 CubicEoS.carbon_number(x::MBWREoSComponent) = x.carbon_number
 
 
-struct MBWREoSMixture{T} <: AbstractEoSMixture
+struct MBWREoSMixture{T} <: AbstractEoSMixture{T}
     components::Vector{MBWREoSComponent{T}}
 
     kij::Matrix{T} # binary interaction coefficient for f
