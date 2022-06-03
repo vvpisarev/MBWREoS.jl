@@ -1,9 +1,3 @@
-abstract type AbstractEoSComponent end
-
-abstract type AbstractEoSMixture end
-
-const NothingOrT{T} = Union{Nothing,T}
-
 struct MBWREoSComponent{T<:Number} <: AbstractEoSComponent
     # meta information
     name::String
@@ -41,46 +35,26 @@ struct MBWREoSComponent{T<:Number} <: AbstractEoSComponent
 end
 MBWREoSComponent(; x...) = MBWREoSComponent{Float64}(; x...)
 
-Base.eltype(::MBWREoSComponent{T}) where {T} = T
-
-for func in (:molar_mass, :name, :acentric_factor, :carbon_number)
-    expr = :($(func)(c::MBWREoSComponent) = getfield(c, $(QuoteNode(func))))
-    eval(expr)
-    eval(:(export $func))
-end
-
-#=
-Mixture
-=#
-
-struct MBWREoSMixture{T} <: AbstractEoSMixture
+struct MBWREoSMixture{T} <: AbstractEoSMixture{T}
     components::Vector{MBWREoSComponent{T}}
 
     kij::Matrix{T} # binary interaction coefficient for f
     lij::Matrix{T} # binary interaction coefficient for h
 
-    function MBWREoSMixture(
-        ;
+    function MBWREoSMixture(;
         components::AbstractVector{MBWREoSComponent{T}},
-        kij::NothingOrT{AbstractMatrix}=nothing,
-        lij::NothingOrT{AbstractMatrix}=nothing,
+        kij::Union{Nothing,AbstractMatrix}=nothing,
+        lij::Union{Nothing,AbstractMatrix}=nothing,
         kw...
     ) where {T}
         nc = length(components)
-        kmatr = kij === nothing ? zeros(T, nc, nc) : kij
-        lmatr = lij === nothing ? zeros(T, nc, nc) : lij
+        kmatr = isnothing(kij) ? zeros(T, nc, nc) : kij
+        lmatr = isnothing(lij) ? zeros(T, nc, nc) : lij
         new{T}(components, kmatr, lmatr)
     end
 end
 
-@inline Base.@propagate_inbounds function Base.getindex(
-    mix::MBWREoSMixture,
-    i::Integer
-)
-    return mix.components[i]
-end
-
-struct MBWRThermoBuffer{T}
+struct MBWRThermoBuffer{T} <: AbstractEoSThermoBuffer
     fij::Matrix{T}
     hij::Matrix{T}
     matr::Matrix{T}
@@ -111,14 +85,3 @@ function MBWRThermoBuffer(mix::MBWREoSMixture{Tm}, nmol::AbstractVector{Tn}) whe
     T = promote_type(Tm, Tn)
     return MBWRThermoBuffer{T}(nc)
 end
-
-"""
-    thermo_buffer(mix[, nmol])
-
-Create a buffer for intermediate calculations of mixture thermodynamic properties.
-
-See also: [`pressure`](@ref), [`log_c_activity`](@ref), [`log_c_activity!`](@ref),
-[`log_c_activity_wj`](@ref), [`log_c_activity_wj!`](@ref)
-"""
-thermo_buffer(mix::MBWREoSMixture) = MBWRThermoBuffer(mix)
-thermo_buffer(mix::MBWREoSMixture, nmol) = MBWRThermoBuffer(mix, nmol)

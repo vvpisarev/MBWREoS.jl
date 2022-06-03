@@ -1,8 +1,17 @@
 module MBWREoS
 
 export MBWREoSComponent, MBWREoSMixture
-export name, acentric_factor, molar_mass, carbon_number, pressure
-export describe
+
+import CubicEoS
+using CubicEoS: AbstractEoSComponent
+using CubicEoS: AbstractEoSMixture
+using CubicEoS: AbstractEoSThermoBuffer, thermo_buffer
+using CubicEoS: ncomponents, components
+using CubicEoS: GAS_CONSTANT_SI
+
+using CubicEoSDatabase
+using ForwardDiff
+using LinearAlgebra
 
 include("constants.jl")
 include("types.jl")
@@ -10,8 +19,5 @@ include("interface.jl")
 include("dbload.jl")
 include("basic_thermo.jl")
 include("chempotential.jl")
-#include("vt_stability.jl")
-#include("vt_flash.jl")
-#include("newton.jl")
 
 end # module

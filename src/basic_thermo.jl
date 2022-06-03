@@ -1,11 +1,3 @@
-#=
-Basic thermodynamic properties
-=#
-using LinearAlgebra
-
-@inline ncomponents(mix::MBWREoSMixture) = length(mix.components)
-@inline Base.length(mix::MBWREoSMixture) = length(mix.components)
-
 function __θ__(Tr, acentric)
     a, b = 0.05202976, -0.7498189
     return 1 + (acentric - C3_OMEGA) * (a + b * log(Tr))
@@ -60,22 +52,20 @@ composition `nmol` and thermal energy `RT`. Allocations may be avoided by passin
 # Keywords
 - `buf`: see ?pressure(mixture)
 """
-function scaling_coeffs(
-    mix::MBWREoSMixture, nmol::AbstractVector, T;
+function scaling_coeffs(mix::MBWREoSMixture, nmol::AbstractVector, T;
     buf::MBWRThermoBuffer=thermo_buffer(mix, nmol)
 )
     fs, hs = __shape_factors!__(mix, T, buf.vec1, buf.vec2)
     fm, hm = __shape_matrices!__(fs, hs, buf.fij, buf.hij)
     comp = components(mix)
-    # mws = map!(molar_mass, buf.vec1, comp)
-    total_mol = sum(nmol)
-    x = map!(x -> x / total_mol, buf.vec2, nmol)
-    hx = sum(x[i] * x[j] * hm[i,j] for i in eachindex(comp) for j in eachindex(comp))
-    fx = sum(x[i] * x[j] * hm[i,j] * fm[i,j]
-        for i in eachindex(comp) for j in eachindex(comp)) / hx
-    # mw = sum(x[i] * x[j] * cbrt(hm[i,j])^4 * sqrt(fm[i,j]) *
-    #     sqrt(2 * mws[i] * mws[j] / (mws[i] + mws[j]))
-    #     for i in eachindex(comp) for j in eachindex(comp))^2 / (fx * cbrt(hx)^8)
+    # TODO: use buf.vec2
+    # For some reasons buf.vec2 .= nmol ./ sum(nmol) don't work w ForwardDiff
+    x = nmol ./ sum(nmol)
+
+    hx = sum(x[i] * x[j] * hm[i,j] for i in eachindex(comp), j in eachindex(comp))
+    fx = sum(
+        x[i] * x[j] * hm[i,j] * fm[i,j] for i in eachindex(comp), j in eachindex(comp)
+    ) / hx
     return (; fx, hx)
 end
 
@@ -135,97 +125,25 @@ function __ref_pressure__(ρ, T)
     return p_MPa * 1e6
 end
 
-"""
-    pressure(substance, υ, RT)
-
-Compute pressure (Pa) of `substance` at given molar volume `υ` (m³ mol⁻¹) and
-thermal energy `RT` (J mol⁻¹).
-"""
-function pressure(substance::MBWREoSComponent, υ::Real, RT::Real)
+function CubicEoS.pressure(substance::MBWREoSComponent, nmol::Real, V::Real, RT::Real)
+    molvol = V / nmol
     T = RT / GAS_CONSTANT_SI
+
     fx, hx = scaling_coeffs(substance, T)
-    T_ref, v_ref = T / fx, υ / hx
+    T_ref, v_ref = T / fx, molvol / hx
     ρ_ref = inv(v_ref)
     p_ref = __ref_pressure__(ρ_ref, T_ref)
 
     return p_ref * fx / hx
 end
 
-"""
-    pressure(substance, nmol, V, RT)
-
-Compute pressure (Pa) of `substance` at given number of moles `nmol` (mol),
-total volume `V` (m³) and thermal energy `RT` (J mol⁻¹).
-"""
-function pressure(substance::MBWREoSComponent, nmol::Real, V::Real, RT::Real)
-    return pressure(substance, V / nmol, RT)
-end
-
-"""
-    pressure(substance; nmol = 1, volume, temperature)
-
-Compute pressure (Pa) of `substance` at given number of moles `nmol` (mol),
-total volume (m³) and temperature (K).
-"""
-function pressure(
-    substance::MBWREoSComponent;
-    nmol::Real = 1,
-    volume::Real,
-    temperature::Real,
-)
-    RT = GAS_CONSTANT_SI * temperature
-    return pressure(substance, nmol, volume, RT)
-end
-
-"""
-    wilson_saturation_pressure(substance, RT)
-
-Return approximate saturation pressure of `substance` at `RT` (J mol⁻¹).
-
-Reference: Brusilovsky2002 [p 272, eq 5.4]
-"""
-function wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
-    return wilson_saturation_pressure(
+function CubicEoS.wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
+    return CubicEoS.wilson_saturation_pressure(
         substance.Pc, substance.RTc, substance.acentric_factor, RT
     )
 end
 
-"""
-    wilson_saturation_pressure(Pc::Real, RTc::Real, acentric_factor::Real, RT::Real)
-
-Approximate saturation pressure at `RT` using Wilson correlation.
-
-# Arguments
-- `Pc::Real` - critical pressure
-- `RTc::Real` - gas constant * critical temperature
-- `acentric_factor::Real` - acentric factor
-- `RT::Real` - gas constant * temperature
-
-Reference: Brusilovsky2002 [p 272, eq 5.4], Mikyska2010 DOI 10.1002/aic.12387 [Algorithm step 1]
-"""
-function wilson_saturation_pressure(Pc::Real, RTc::Real, acentric_factor::Real, RT::Real)
-    return Pc * exp(5.373 * (1.0 + acentric_factor) * (1.0 - RTc / RT))
-end
-
-"""
-    pressure(mixture, nmol, volume, RT[; buf])
-
-Return pressure (Pa) of `mixture` at given
-
-- `nmol::AbstractVector`: composition (molar parts) or number of moles (mol)
-- `volume::Real`: molar volume (m³ mol⁻¹) or volume (m³)
-- `RT::Real`: thermal energy (J mol⁻¹)
-
-Allocations may be avoided by passing `buf`.
-
-# Keywords
-- `buf::Union{BrusilovskyThermoBuffer,NamedTuple,AbstractDict}`: Buffer for intermediate
-    calculations. In case of `NamedTuple` and `AbstractDict` `buf` should contain `buf[:ai]`
-    `NC = ncomponents(mixture)` vector and `buf[:aij]` NCxNC matrix.
-
-See also: [`thermo_buffer`](@ref)
-"""
-function pressure(
+function CubicEoS.pressure(
     mixture::MBWREoSMixture,
     nmol::AbstractVector,
     volume::Real,
