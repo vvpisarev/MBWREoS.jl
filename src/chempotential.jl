@@ -75,18 +75,9 @@ function exc_helmholtz(
     return Aexc * fx * total_mol
 end
 
-function CubicEoS.log_c_activity(
-    mix::MBWREoSMixture,
-    nmol::AbstractVector,
-    volume::Real,
-    RT::Real;
-    buf = thermo_buffer(mix, nmol),
-)
-    Aexc(nmol) = exc_helmholtz(mix, nmol, volume, RT; buf)
-    log_ca = ForwardDiff.gradient(Aexc, nmol)
-    log_ca ./= RT
-    return log_ca
-end
+#####
+##### CubicEoS interface for chemical potential
+#####
 
 function CubicEoS.log_c_activity!(
     log_ca::AbstractVector,
@@ -98,23 +89,7 @@ function CubicEoS.log_c_activity!(
 )
     Aexc(nmol) = exc_helmholtz(mix, nmol, volume, RT; buf)
     log_ca .= ForwardDiff.gradient(Aexc, nmol) ./ RT
-
     return log_ca
-end
-
-function CubicEoS.log_c_activity_wj(
-    mix::MBWREoSMixture{T},
-    nmol::AbstractVector,
-    volume::Real,
-    RT::Real;
-    buf::MBWRThermoBuffer = thermo_buffer(mix, nmol),
-) where {T}
-    Aexc(nmol) = exc_helmholtz(mix, nmol, volume, RT; buf)
-    log_ca = ForwardDiff.gradient(Aexc, nmol)
-    log_ca ./= RT
-    jacobian = ForwardDiff.hessian(Aexc, nmol)
-    jacobian ./= RT
-    return log_ca, jacobian
 end
 
 function CubicEoS.log_c_activity_wj!(
