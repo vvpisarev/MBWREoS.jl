@@ -1,5 +1,3 @@
-const NothingOrT{T} = Union{Nothing,T}
-
 struct MBWREoSComponent{T<:Number} <: AbstractEoSComponent
     # meta information
     name::String
@@ -45,8 +43,8 @@ struct MBWREoSMixture{T} <: AbstractEoSMixture{T}
 
     function MBWREoSMixture(;
         components::AbstractVector{MBWREoSComponent{T}},
-        kij::NothingOrT{AbstractMatrix}=nothing,
-        lij::NothingOrT{AbstractMatrix}=nothing,
+        kij::Union{Nothing,AbstractMatrix}=nothing,
+        lij::Union{Nothing,AbstractMatrix}=nothing,
         kw...
     ) where {T}
         nc = length(components)
