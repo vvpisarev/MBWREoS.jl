@@ -7,6 +7,7 @@ using CubicEoS: AbstractEoSComponent
 using CubicEoS: AbstractEoSMixture
 using CubicEoS: AbstractEoSThermoBuffer, thermo_buffer
 using CubicEoS: ncomponents, components
+using CubicEoS: GAS_CONSTANT_SI
 
 using CubicEoSDatabase
 using ForwardDiff
