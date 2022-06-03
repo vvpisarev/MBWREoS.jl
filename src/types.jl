@@ -37,14 +37,6 @@ struct MBWREoSComponent{T<:Number} <: AbstractEoSComponent
 end
 MBWREoSComponent(; x...) = MBWREoSComponent{Float64}(; x...)
 
-Base.eltype(::MBWREoSComponent{T}) where {T} = T
-
-CubicEoS.molar_mass(x::MBWREoSComponent) = x.molar_mass
-CubicEoS.name(x::MBWREoSComponent) = x.name
-acentric_factor(x::MBWREoSComponent) = x.acentric_factor  # Not defined in CubicEoS
-CubicEoS.carbon_number(x::MBWREoSComponent) = x.carbon_number
-
-
 struct MBWREoSMixture{T} <: AbstractEoSMixture{T}
     components::Vector{MBWREoSComponent{T}}
 
@@ -63,16 +55,6 @@ struct MBWREoSMixture{T} <: AbstractEoSMixture{T}
         new{T}(components, kmatr, lmatr)
     end
 end
-
-@inline Base.@propagate_inbounds function Base.getindex(
-    mix::MBWREoSMixture,
-    i::Integer,
-)
-    return mix.components[i]
-end
-
-components(x::MBWREoSMixture) = x.components
-CubicEoS.ncomponents(x::MBWREoSMixture) = length(x.components)
 
 struct MBWRThermoBuffer{T} <: AbstractEoSThermoBuffer
     fij::Matrix{T}
@@ -105,7 +87,3 @@ function MBWRThermoBuffer(mix::MBWREoSMixture{Tm}, nmol::AbstractVector{Tn}) whe
     T = promote_type(Tm, Tn)
     return MBWRThermoBuffer{T}(nc)
 end
-
-CubicEoS.thermo_buffer(mix::MBWREoSMixture) = MBWRThermoBuffer(mix)
-CubicEoS.thermo_buffer(mix::MBWREoSMixture, nmol) = MBWRThermoBuffer(mix, nmol)
-thermo_buffer = CubicEoS.thermo_buffer

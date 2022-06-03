@@ -1,6 +1,3 @@
-@inline ncomponents(mix::MBWREoSMixture) = length(mix.components)
-@inline Base.length(mix::MBWREoSMixture) = length(mix.components)
-
 function __θ__(Tr, acentric)
     a, b = 0.05202976, -0.7498189
     return 1 + (acentric - C3_OMEGA) * (a + b * log(Tr))
