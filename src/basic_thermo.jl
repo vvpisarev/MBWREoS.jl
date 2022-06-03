@@ -125,39 +125,16 @@ function __ref_pressure__(ρ, T)
     return p_MPa * 1e6
 end
 
-"""
-    pressure(substance, υ, RT)
-
-Compute pressure (Pa) of `substance` at given molar volume `υ` (m³ mol⁻¹) and
-thermal energy `RT` (J mol⁻¹).
-"""
-function pressure(substance::MBWREoSComponent, υ::Real, RT::Real)
+function CubicEoS.pressure(substance::MBWREoSComponent, nmol::Real, V::Real, RT::Real)
+    molvol = V / nmol
     T = RT / GAS_CONSTANT_SI
+
     fx, hx = scaling_coeffs(substance, T)
-    T_ref, v_ref = T / fx, υ / hx
+    T_ref, v_ref = T / fx, molvol / hx
     ρ_ref = inv(v_ref)
     p_ref = __ref_pressure__(ρ_ref, T_ref)
 
     return p_ref * fx / hx
-end
-
-"""
-    pressure(substance, nmol, V, RT)
-
-Compute pressure (Pa) of `substance` at given number of moles `nmol` (mol),
-total volume `V` (m³) and thermal energy `RT` (J mol⁻¹).
-"""
-function pressure(substance::MBWREoSComponent, nmol::Real, V::Real, RT::Real)
-    return pressure(substance, V / nmol, RT)
-end
-
-function pressure(substance::MBWREoSComponent;
-    nmol::Real=1,
-    volume::Real,
-    temperature::Real,
-)
-    RT = GAS_CONSTANT_SI * temperature
-    return pressure(substance, nmol, volume, RT)
 end
 
 function CubicEoS.wilson_saturation_pressure(substance::MBWREoSComponent, RT::Real)
