@@ -1,6 +1,9 @@
+const _DBROOT = joinpath(abspath(@__DIR__), "../data")
+const MBWR_PHYSICS_PARAMS = ComponentDatabase(joinpath(_DBROOT, "nist.csv"))
+
 function load(::Type{<:MBWREoSComponent};
     name::AbstractString,
-    component_dbs = (ComponentDatabase("data/nist.csv"),)
+    component_dbs = (MBWR_PHYSICS_PARAMS,)
 )
     comp_properties = foldl(
         (dict, db) -> merge!(dict, getentry(db, name)),
@@ -54,7 +57,7 @@ end
 
 function CubicEoS.load(::Type{<:MBWREoSMixture};
     names,
-    component_dbs=(Data.martinez(), Data.brusilovsky_comp()),
+    component_dbs=(MBWR_PHYSICS_PARAMS, Data.brusilovsky_comp()),
     mix_eos_db::MixtureDatabase=Data.brusilovsky_mix_adjusted(),
 )
     components = map(names) do name
